@@ -140,7 +140,17 @@ if run_button:
             billed_cols.append(f"Billed Hrs_{month}-{year}")
             perf_cols.append(f"Performed Hrs_{month}-{year}")
 
-
+            try:
+                df = (
+                        df.groupby(
+                            ["Order Locn", "Cust No", "Billing Flag", "Rank/Design"],
+                            as_index=False
+                        )[["Performed Hrs", "Billed Hrs"]]
+                        .sum()
+                    )
+            except Exception as e:
+                st.error(f"Error during grouping step: {e}")
+                st.stop()
 
             try:
                 df.rename(
@@ -161,22 +171,6 @@ if run_button:
                 st.error(f"Error renaming columns: {e}")
                 st.stop()
 
-            try:
-                df.drop(columns=["Period To"], inplace=True)
-            except Exception as e:
-                st.error(f"Error dropping Period To column: {e}")
-                st.stop()
-            try:
-                df = (
-                        df.groupby(
-                            ["Order Locn", "Cust No", "Billing Flag", "Rank/Design"],
-                            as_index=False
-                        )[["Performed Hrs", "Billed Hrs"]]
-                        .sum()
-                    )
-            except Exception as e:
-                st.error(f"Error during grouping step: {e}")
-                st.stop()
 
         status_text.success("Monthly processing completed.")
         time.sleep(0.5)
