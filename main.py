@@ -132,8 +132,8 @@ if run_button:
                 st.error(f"Error extracting month/year: {e}")
                 st.stop()
 
-            billed_cols.append(f"Billed Hrs_{month}-{year}")
-            perf_cols.append(f"Performed Hrs_{month}-{year}")
+            billed_cols.append(f"Billed Hrs_{month:02d}-{year}")
+            perf_cols.append(f"Performed Hrs_{month:02d}-{year}")
 
             try:
                 df = (
