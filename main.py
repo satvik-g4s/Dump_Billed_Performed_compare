@@ -86,7 +86,15 @@ if run_button:
                     header=2,
                     index_col=False,
                     usecols=required_columns,
-                    encoding="latin1"
+                    encoding="latin1",
+                    dtype={
+                        "Order Locn": "category",
+                        "Cust No": "category",
+                        "Billing Flag": "category",
+                        "Rank/Design": "category",
+                        "Performed Hrs": "float32",
+                        "Billed Hrs": "float32"
+                    }
                 )
             except Exception as e:
                 st.error(f"Error reading file {uploaded_file.name}: {e}")
@@ -171,33 +179,39 @@ if run_button:
         # MERGING
         # ---------------------------------------------------
 
-        status_text.info("Merging all monthly datasets...")
+        status_text.info("Optimizing and merging datasets...")
         time.sleep(0.5)
-
+        
         try:
-            main_df = dfs[0].copy()
-
-            for df in dfs[1:]:
-
-                main_df = pd.merge(
-                    main_df,
+        
+            optimized_dfs = []
+        
+            for df in dfs:
+        
+                # reduce memory usage
+                for col in ["Order Locn", "Cust No", "Billing Flag", "Rank/Design"]:
+                    df[col] = df[col].astype("category")
+        
+                df = df.set_index(
+                    ["Order Locn", "Cust No", "Billing Flag", "Rank/Design"]
+                )
+        
+                optimized_dfs.append(df)
+        
+            main_df = optimized_dfs[0]
+        
+            for df in optimized_dfs[1:]:
+        
+                main_df = main_df.join(
                     df,
-                    on=[
-                        "Order Locn",
-                        "Cust No",
-                        "Billing Flag",
-                        "Rank/Design"
-                    ],
                     how="outer"
                 )
-
+        
+            main_df = main_df.reset_index()
+        
         except Exception as e:
             st.error(f"Error during merge operation: {e}")
             st.stop()
-
-        status_text.success("Merge completed.")
-        time.sleep(0.5)
-
         # ---------------------------------------------------
         # SORTING
         # ---------------------------------------------------
