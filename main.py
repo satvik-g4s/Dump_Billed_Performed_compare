@@ -124,10 +124,6 @@ if run_button:
 
         for i, df in enumerate(dfs):
 
-            try:
-            except Exception as e:
-                st.error(f"Error converting Period To column: {e}")
-                st.stop()
 
             try:
                 month = df["Period To"].iloc[0].month
