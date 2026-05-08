@@ -85,7 +85,8 @@ if run_button:
                     uploaded_file,
                     header=2,
                     index_col=False,
-                    usecols=required_columns
+                    usecols=required_columns,
+                    encoding="latin1"
                 )
             except Exception as e:
                 st.error(f"Error reading file {uploaded_file.name}: {e}")
