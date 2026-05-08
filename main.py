@@ -234,7 +234,7 @@ if run_button:
                 [col for col in main_df.columns if "Billed Hrs_" in col],
                 key=lambda x: pd.to_datetime(
                     x.replace("Billed Hrs_", ""),
-                    format="%m-%Y"
+                    format="%m-%y"
                 )
             )
             
@@ -242,7 +242,7 @@ if run_button:
                 [col for col in main_df.columns if "Performed Hrs_" in col],
                 key=lambda x: pd.to_datetime(
                     x.replace("Performed Hrs_", ""),
-                    format="%m-%Y"
+                    format="%m-%y"
                 )
             )
 
