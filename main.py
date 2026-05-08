@@ -148,16 +148,12 @@ if run_button:
                 st.stop()
 
             try:
-                df.rename(
-                    columns={
-                        "Performed Hrs": f"Performed Hrs_{month}-{year}"
-                    },
-                    inplace=True
-                )
+                month_label = f"{month:02d}-{str(year)[-2:]}"
 
                 df.rename(
                     columns={
-                        "Billed Hrs": f"Billed Hrs_{month}-{year}"
+                        "Performed Hrs": f"Performed Hrs_{month_label}",
+                        "Billed Hrs": f"Billed Hrs_{month_label}"
                     },
                     inplace=True
                 )
