@@ -235,11 +235,19 @@ if run_button:
 
         try:
             billed_cols = sorted(
-                [col for col in main_df.columns if "Billed Hrs_" in col]
+                [col for col in main_df.columns if "Billed Hrs_" in col],
+                key=lambda x: pd.to_datetime(
+                    x.replace("Billed Hrs_", ""),
+                    format="%m-%Y"
+                )
             )
-
+            
             perf_cols = sorted(
-                [col for col in main_df.columns if "Performed Hrs_" in col]
+                [col for col in main_df.columns if "Performed Hrs_" in col],
+                key=lambda x: pd.to_datetime(
+                    x.replace("Performed Hrs_", ""),
+                    format="%m-%Y"
+                )
             )
 
         except Exception as e:
