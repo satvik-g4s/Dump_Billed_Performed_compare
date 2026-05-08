@@ -125,7 +125,6 @@ if run_button:
         for i, df in enumerate(dfs):
 
             try:
-                df["Period To"] = pd.to_datetime(df["Period To"])
             except Exception as e:
                 st.error(f"Error converting Period To column: {e}")
                 st.stop()
@@ -170,6 +169,8 @@ if run_button:
             except Exception as e:
                 st.error(f"Error renaming columns: {e}")
                 st.stop()
+            # IMPORTANT
+            dfs[i] = df
 
 
         status_text.success("Monthly processing completed.")
