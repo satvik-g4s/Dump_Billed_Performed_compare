@@ -140,9 +140,13 @@ if run_button:
             perf_cols.append(f"Performed Hrs_{month}-{year}")
 
             try:
-                df.groupby(
-                    ["Order Locn", "Cust No", "Billing Flag", "Rank/Design"]
-                )
+                df = (
+                        df.groupby(
+                            ["Order Locn", "Cust No", "Billing Flag", "Rank/Design"],
+                            as_index=False
+                        )[["Performed Hrs", "Billed Hrs"]]
+                        .sum()
+                    )
             except Exception as e:
                 st.error(f"Error during grouping step: {e}")
                 st.stop()
