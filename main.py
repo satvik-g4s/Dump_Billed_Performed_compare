@@ -87,6 +87,7 @@ if run_button:
                     index_col=False,
                     usecols=required_columns,
                     encoding="latin1",
+                    parse_dates=["Period To"],
                     dtype={
                         "Order Locn": "category",
                         "Cust No": "category",
