@@ -69,6 +69,7 @@ if run_button:
         required_columns = [
             "Order Locn",
             "Cust No",
+            "Order No",
             "Billing Flag",
             "Rank/Design",
             "Period To",
@@ -97,7 +98,8 @@ if run_button:
                         "Rank/Design": "category",
                         "Performed Hrs": "float32",
                         "Billed Hrs": "float32",
-                        "Status": "category"
+                        "Status": "category",
+                        "Order No": "category"
                     }
                 )
                 df = df[df["Status"].isin(["A", "O"])]
@@ -140,7 +142,7 @@ if run_button:
             try:
                 df = (
                         df.groupby(
-                            ["Order Locn", "Cust No", "Billing Flag", "Rank/Design"],
+                            ["Order Locn", "Cust No","Order No", "Billing Flag", "Rank/Design"],
                             as_index=False,
                             observed=True
                         )[["Performed Hrs", "Billed Hrs"]]
@@ -152,7 +154,7 @@ if run_button:
             try:
                 check3_temp = (
                     check3_temp.groupby(
-                        ["Order Locn", "Cust No", "Billing Flag"],
+                        ["Order Locn", "Cust No","Order No", "Billing Flag"],
                         as_index=False,
                         observed=True
                     )[["Performed Hrs", "Billed Hrs"]]
@@ -213,11 +215,11 @@ if run_button:
             for df in dfs:
         
                 # reduce memory usage
-                for col in ["Order Locn", "Cust No", "Billing Flag", "Rank/Design"]:
+                for col in ["Order Locn", "Cust No","Order No", "Billing Flag", "Rank/Design"]:
                     df[col] = df[col].astype("category")
         
                 df = df.set_index(
-                    ["Order Locn", "Cust No", "Billing Flag", "Rank/Design"]
+                    ["Order Locn", "Cust No","Order No", "Billing Flag", "Rank/Design"]
                 )
         
                 optimized_dfs.append(df)
@@ -242,11 +244,11 @@ if run_button:
             
                 for df in check3_dfs:
             
-                    for col in ["Order Locn", "Cust No", "Billing Flag"]:
+                    for col in ["Order Locn", "Cust No","Order No", "Billing Flag"]:
                         df[col] = df[col].astype("category")
             
                     df = df.set_index(
-                        ["Order Locn", "Cust No", "Billing Flag"]
+                        ["Order Locn", "Cust No","Order No", "Billing Flag"]
                     )
             
                     optimized_check3_dfs.append(df)
@@ -281,6 +283,7 @@ if run_button:
                 by=[
                     "Order Locn",
                     "Cust No",
+                    "Order No",
                     "Billing Flag",
                     "Rank/Design"
                 ]
@@ -289,6 +292,7 @@ if run_button:
                 by=[
                     "Order Locn",
                     "Cust No",
+                    "Order No",
                     "Billing Flag"
                 ]
             )
@@ -327,7 +331,7 @@ if run_button:
                 equal_nan=True
             )
 
-            main_df["check1_6mon"] = comparison.all(axis=1)
+            main_df["6mon_1st"] = comparison.all(axis=1)
 
         except Exception as e:
             st.error(f"Error during check1_6mon: {e}")
@@ -340,7 +344,7 @@ if run_button:
             equal_nan=True
         )
 
-            main_df["check1_3mon"] = comparison_3.all(axis=1)
+            main_df["3mon_1st"] = comparison_3.all(axis=1)
 
         except Exception as e:
             st.error(f"Error during check1_3mon: {e}")
@@ -356,7 +360,7 @@ if run_button:
         try:
             all_6_cols = perf_cols + billed_cols
 
-            main_df["check_2_6mon"] = (
+            main_df["6mon_2nd"] = (
                 main_df[all_6_cols]
                 .nunique(axis=1, dropna=False)
                 .eq(1)
@@ -369,7 +373,7 @@ if run_button:
         try:
             all_3_cols = perf_cols[-3:] + billed_cols[-3:]
 
-            main_df["check_2_3mon"] = (
+            main_df["3mon_2nd"] = (
                 main_df[all_3_cols]
                 .nunique(axis=1, dropna=False)
                 .eq(1)
@@ -399,7 +403,7 @@ if run_button:
                 equal_nan=True
             )
         
-            check3_df["check3_6mon"] = comparison_6.all(axis=1)
+            check3_df["6mon_3rd"] = comparison_6.all(axis=1)
         
         except Exception as e:
             st.error(f"Error during check3_6mon: {e}")
@@ -417,11 +421,37 @@ if run_button:
                 equal_nan=True
             )
         
-            check3_df["check3_3mon"] = comparison_3.all(axis=1)
+            check3_df["3mon_3rd"] = comparison_3.all(axis=1)
+
+            # ---------------------------------------------------
+            # MERGE CHECK3 FLAGS BACK TO MAIN_DF
+            # ---------------------------------------------------
+            
+            main_df = main_df.merge(
+                check3_df[
+                    [
+                        "Order Locn",
+                        "Cust No",
+                        "Order No",
+                        "Billing Flag",
+                        "6mon_3rd",
+                        "3mon_3rd"
+                    ]
+                ],
+                on=[
+                    "Order Locn",
+                    "Cust No",
+                    "Order No",
+                    "Billing Flag"
+                ],
+                how="left"
+            )
         
         except Exception as e:
             st.error(f"Error during check3_3mon: {e}")
             st.stop()
+
+        
 
         # ---------------------------------------------------
         # OUTPUT GENERATION
