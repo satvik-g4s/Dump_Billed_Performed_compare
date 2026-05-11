@@ -21,7 +21,7 @@ uploaded_files = st.file_uploader(
 )
 
 st.caption("""Required Columns:Order Locn, Cust No, Order No, Billing Flag,Status, Rank/Design, Period To, Performed Hrs, Billed Hrs
-- Upload All 6 Dump Files Together in csv format UNTOUCHED, Header starts from row 3
+Upload All 6 Dump Files Together in csv format UNTOUCHED, Header starts from row 3
 """)
 
 run_button = st.button("Run")
