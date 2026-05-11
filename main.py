@@ -73,7 +73,8 @@ if run_button:
             "Rank/Design",
             "Period To",
             "Performed Hrs",
-            "Billed Hrs"
+            "Billed Hrs",
+            "Status"
         ]
 
         dfs = []
@@ -95,9 +96,11 @@ if run_button:
                         "Billing Flag": "category",
                         "Rank/Design": "category",
                         "Performed Hrs": "float32",
-                        "Billed Hrs": "float32"
+                        "Billed Hrs": "float32",
+                        "Status": "category"
                     }
                 )
+                df = df[df["Status"].isin(["A", "O"])]
             except Exception as e:
                 st.error(f"Error reading file {uploaded_file.name}: {e}")
                 st.stop()
