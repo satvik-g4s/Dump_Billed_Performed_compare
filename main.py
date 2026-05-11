@@ -77,6 +77,7 @@ if run_button:
         ]
 
         dfs = []
+        check3_dfs = []
 
         for idx, uploaded_file in enumerate(uploaded_files, start=1):
 
@@ -111,20 +112,19 @@ if run_button:
 
         status_text.success("Files loaded successfully.")
         time.sleep(0.5)
-
         # ---------------------------------------------------
         # PROCESSING LOGIC
         # ---------------------------------------------------
 
-        billed_cols = []
-        perf_cols = []
+        billed_dict = {}
+        perf_dict = {}
 
         status_text.info("Processing monthly datasets...")
         time.sleep(0.5)
 
         for i, df in enumerate(dfs):
 
-
+            check3_temp = df.copy()
             try:
                 month = df["Period To"].iloc[0].month
                 year = df["Period To"].iloc[0].year
@@ -132,38 +132,66 @@ if run_button:
                 st.error(f"Error extracting month/year: {e}")
                 st.stop()
 
-            billed_cols.append(f"Billed Hrs_{month:02d}-{year}")
-            perf_cols.append(f"Performed Hrs_{month:02d}-{year}")
+
 
             try:
                 df = (
                         df.groupby(
                             ["Order Locn", "Cust No", "Billing Flag", "Rank/Design"],
-                            as_index=False
+                            as_index=False,
+                            observed=True
                         )[["Performed Hrs", "Billed Hrs"]]
                         .sum()
                     )
             except Exception as e:
                 st.error(f"Error during grouping step: {e}")
                 st.stop()
+            try:
+                check3_temp = (
+                    check3_temp.groupby(
+                        ["Order Locn", "Cust No", "Billing Flag"],
+                        as_index=False,
+                        observed=True
+                    )[["Performed Hrs", "Billed Hrs"]]
+                    .sum()
+                )
+            
+            except Exception as e:
+                st.error(f"Error during Check3 grouping step: {e}")
+                st.stop()
 
             try:
+                month_key = int(f"{str(year)[-2:]}{month:02d}")
+
                 month_label = f"{month:02d}-{str(year)[-2:]}"
 
+                perf_col = f"Performed Hrs_{month_label}"
+                bill_col = f"Billed Hrs_{month_label}"
+                
                 df.rename(
                     columns={
-                        "Performed Hrs": f"Performed Hrs_{month_label}",
-                        "Billed Hrs": f"Billed Hrs_{month_label}"
+                        "Performed Hrs": perf_col,
+                        "Billed Hrs": bill_col
                     },
                     inplace=True
                 )
+                check3_temp.rename(
+                    columns={
+                        "Performed Hrs": perf_col,
+                        "Billed Hrs": bill_col
+                    },
+                    inplace=True
+                )
+                
+                perf_dict[month_key] = perf_col
+                billed_dict[month_key] = bill_col
 
             except Exception as e:
                 st.error(f"Error renaming columns: {e}")
                 st.stop()
             # IMPORTANT
             dfs[i] = df
-
+            check3_dfs.append(check3_temp)
 
         status_text.success("Monthly processing completed.")
         time.sleep(0.5)
@@ -201,6 +229,39 @@ if run_button:
                 )
         
             main_df = main_df.reset_index()
+            # ---------------------------------------------------
+            # CHECK3 MERGE
+            # ---------------------------------------------------
+            
+            try:
+            
+                optimized_check3_dfs = []
+            
+                for df in check3_dfs:
+            
+                    for col in ["Order Locn", "Cust No", "Billing Flag"]:
+                        df[col] = df[col].astype("category")
+            
+                    df = df.set_index(
+                        ["Order Locn", "Cust No", "Billing Flag"]
+                    )
+            
+                    optimized_check3_dfs.append(df)
+            
+                check3_df = optimized_check3_dfs[0]
+            
+                for df in optimized_check3_dfs[1:]:
+            
+                    check3_df = check3_df.join(
+                        df,
+                        how="outer"
+                    )
+            
+                check3_df = check3_df.reset_index()
+            
+            except Exception as e:
+                st.error(f"Error during Check3 merge operation: {e}")
+                st.stop()
         
         except Exception as e:
             st.error(f"Error during merge operation: {e}")
@@ -221,6 +282,15 @@ if run_button:
                     "Rank/Design"
                 ]
             )
+            check3_df = check3_df.sort_values(
+                by=[
+                    "Order Locn",
+                    "Cust No",
+                    "Billing Flag"
+                ]
+            )
+            main_df = main_df.reset_index(drop=True)
+            check3_df = check3_df.reset_index(drop=True)
         except Exception as e:
             st.error(f"Error during sorting: {e}")
             st.stop()
@@ -230,26 +300,14 @@ if run_button:
         # ---------------------------------------------------
 
         try:
-            billed_cols = sorted(
-                [col for col in main_df.columns if "Billed Hrs_" in col],
-                key=lambda x: pd.to_datetime(
-                    x.replace("Billed Hrs_", ""),
-                    format="%m-%y"
-                )
-            )
-            
-            perf_cols = sorted(
-                [col for col in main_df.columns if "Performed Hrs_" in col],
-                key=lambda x: pd.to_datetime(
-                    x.replace("Performed Hrs_", ""),
-                    format="%m-%y"
-                )
-            )
-
+            sorted_keys = sorted(perf_dict.keys())
+        
+            perf_cols = [perf_dict[k] for k in sorted_keys]
+            billed_cols = [billed_dict[k] for k in sorted_keys]
+        
         except Exception as e:
             st.error(f"Error detecting dynamic columns: {e}")
             st.stop()
-
         # ---------------------------------------------------
         # CHECK 1
         # ---------------------------------------------------
@@ -257,16 +315,13 @@ if run_button:
         status_text.info("Running Check 1...")
         time.sleep(0.5)
 
-        def check1(perf, bill):
-            if (perf == bill):
-                return True
-            else:
-                return False
+
 
         try:
-            comparison = (
-                main_df[perf_cols].values ==
-                main_df[billed_cols].values
+            comparison = np.isclose(
+                main_df[perf_cols].values,
+                main_df[billed_cols].values,
+                equal_nan=True
             )
 
             main_df["check1_6mon"] = comparison.all(axis=1)
@@ -276,10 +331,11 @@ if run_button:
             st.stop()
 
         try:
-            comparison_3 = (
-                main_df[perf_cols[-3:]].values ==
-                main_df[billed_cols[-3:]].values
-            )
+            comparison_3 = np.isclose(
+            main_df[perf_cols[-3:]].values,
+            main_df[billed_cols[-3:]].values,
+            equal_nan=True
+        )
 
             main_df["check1_3mon"] = comparison_3.all(axis=1)
 
@@ -299,8 +355,8 @@ if run_button:
 
             main_df["check_2_6mon"] = (
                 main_df[all_6_cols]
-                .eq(main_df[all_6_cols].iloc[:, 0], axis=0)
-                .all(axis=1)
+                .nunique(axis=1, dropna=False)
+                .eq(1)
             )
 
         except Exception as e:
@@ -312,8 +368,8 @@ if run_button:
 
             main_df["check_2_3mon"] = (
                 main_df[all_3_cols]
-                .eq(main_df[all_3_cols].iloc[:, 0], axis=0)
-                .all(axis=1)
+                .nunique(axis=1, dropna=False)
+                .eq(1)
             )
 
         except Exception as e:
@@ -323,48 +379,43 @@ if run_button:
         # ---------------------------------------------------
         # CHECK 3
         # ---------------------------------------------------
-
+        
         status_text.info("Running Check 3...")
         time.sleep(0.5)
-
-        group_cols = ["Order Locn", "Cust No", "Billing Flag"]
-
+        
+        
+        # ---------------------------------------------------
+        # CHECK3 6 MONTH
+        # ---------------------------------------------------
+        
         try:
-            eq_6 = (
-                main_df[perf_cols].values ==
-                main_df[billed_cols].values
-            ).all(axis=1)
-
-            group_check_6 = (
-                pd.Series(eq_6, index=main_df.index)
-                .groupby([main_df[c] for c in group_cols])
-                .transform("all")
+        
+            comparison_6 = np.isclose(
+                check3_df[perf_cols].values,
+                check3_df[billed_cols].values,
+                equal_nan=True
             )
-
-            first_mask = ~main_df.duplicated(subset=group_cols)
-
-            main_df["check3_6mon"] = None
-            main_df.loc[first_mask, "check3_6mon"] = group_check_6[first_mask]
-
+        
+            check3_df["check3_6mon"] = comparison_6.all(axis=1)
+        
         except Exception as e:
             st.error(f"Error during check3_6mon: {e}")
             st.stop()
-
+        
+        # ---------------------------------------------------
+        # CHECK3 3 MONTH
+        # ---------------------------------------------------
+        
         try:
-            eq_3 = (
-                main_df[perf_cols[-3:]].values ==
-                main_df[billed_cols[-3:]].values
-            ).all(axis=1)
-
-            group_check_3 = (
-                pd.Series(eq_3, index=main_df.index)
-                .groupby([main_df[c] for c in group_cols])
-                .transform("all")
+        
+            comparison_3 = np.isclose(
+                check3_df[perf_cols[-3:]].values,
+                check3_df[billed_cols[-3:]].values,
+                equal_nan=True
             )
-
-            main_df["check3_3mon"] = None
-            main_df.loc[first_mask, "check3_3mon"] = group_check_3[first_mask]
-
+        
+            check3_df["check3_3mon"] = comparison_3.all(axis=1)
+        
         except Exception as e:
             st.error(f"Error during check3_3mon: {e}")
             st.stop()
@@ -380,7 +431,17 @@ if run_button:
             output = BytesIO()
 
             with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                main_df.to_excel(writer, index=False, sheet_name="Output")
+                main_df.to_excel(
+                    writer,
+                    index=False,
+                    sheet_name="Output"
+                )
+            
+                check3_df.to_excel(
+                    writer,
+                    index=False,
+                    sheet_name="Check3_Output"
+                )
 
             output.seek(0)
 
