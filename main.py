@@ -20,7 +20,7 @@ uploaded_files = st.file_uploader(
     accept_multiple_files=True
 )
 
-st.caption("""Required Columns:Order Locn, Cust No, Order No, Billing Flag,Status, Rank/Design, Period To, Performed Hrs, Billed Hrs
+st.caption("""Required Columns:Order Locn, Cust No, Order No, Billing Flag,Status, Rank/Design, Period To, Performed Hrs, Billed Hrs ; 
 Upload All 6 Dump Files Together in csv format UNTOUCHED, Header starts from row 3
 """)
 
