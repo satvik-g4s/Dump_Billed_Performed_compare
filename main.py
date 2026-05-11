@@ -356,16 +356,10 @@ if run_button:
         try:
             all_6_cols = perf_cols + billed_cols
 
-            vals_6 = main_df[all_6_cols]
-
             main_df["check_2_6mon"] = (
-                vals_6.eq(vals_6.iloc[:, 0], axis=0).all(axis=1)
-                &
-                (
-                    vals_6.isna().all(axis=1)
-                    |
-                    vals_6.notna().all(axis=1)
-                )
+                main_df[all_6_cols]
+                .nunique(axis=1, dropna=False)
+                .eq(1)
             )
 
         except Exception as e:
@@ -373,16 +367,12 @@ if run_button:
             st.stop()
 
         try:
-            vals_3 = main_df[all_3_cols]
+            all_3_cols = perf_cols[-3:] + billed_cols[-3:]
 
             main_df["check_2_3mon"] = (
-                vals_3.eq(vals_3.iloc[:, 0], axis=0).all(axis=1)
-                &
-                (
-                    vals_3.isna().all(axis=1)
-                    |
-                    vals_3.notna().all(axis=1)
-                )
+                main_df[all_3_cols]
+                .nunique(axis=1, dropna=False)
+                .eq(1)
             )
 
         except Exception as e:
