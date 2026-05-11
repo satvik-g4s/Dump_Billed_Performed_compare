@@ -20,21 +20,8 @@ uploaded_files = st.file_uploader(
     accept_multiple_files=True
 )
 
-st.caption("""
-Required Columns:
-- Order Locn
-- Cust No
-- Billing Flag
-- Rank/Design
-- Period To
-- Performed Hrs
-- Billed Hrs
-
-Notes:
-- Files should contain monthly data
-- Each file should represent one month
-- CSV structure should remain consistent
-- Header starts from row 3 (header=2)
+st.caption("""Required Columns:Order Locn, Cust No, Order No, Billing Flag,Status, Rank/Design, Period To, Performed Hrs, Billed Hrs
+- Upload All 6 Dump Files Together in csv format UNTOUCHED, Header starts from row 3
 """)
 
 run_button = st.button("Run")
@@ -487,7 +474,7 @@ if run_button:
         st.download_button(
             label="Download Report",
             data=output,
-            file_name="hours_reconciliation_output.xlsx",
+            file_name="Billed-Performed-hours_Checks_output.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
