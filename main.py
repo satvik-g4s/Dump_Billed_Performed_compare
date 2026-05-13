@@ -72,7 +72,8 @@ if run_button:
             "Billed Hrs",
             "Status",
             "Adj Amount",
-            "Adj Remarks"
+            "Adj Remarks",
+            "Amount"
         ]
 
         dfs = []
@@ -100,6 +101,7 @@ if run_button:
                         "Billing Flag": "category",
                         "Rank/Design": "category",
                         "Performed Hrs": "float32",
+                        "Amount": "float32",
                         "Billed Hrs": "float32",
                         "Status": "category",
                         "Order No": "category",
@@ -179,6 +181,7 @@ if run_button:
         perf_dict = {}
         adj_amt_dict = {}
         adj_rem_dict = {}
+        amount_dict = {}
 
         status_text.info(
             "Step 2/10: Aggregating monthly reconciliation data..."
@@ -224,6 +227,7 @@ if run_button:
                     ).agg({
                         "Performed Hrs": "sum",
                         "Billed Hrs": "sum",
+                        "Amount": "sum",
                         "Adj Amount": "max",
                         "Adj Remarks": "max"
                     })
@@ -283,13 +287,15 @@ if run_button:
                 bill_col = f"Billed Hrs_{month_label}"
                 adj_amt_col = f"Adj Amount_{month_label}"
                 adj_rem_col = f"Adj Remarks_{month_label}"
+                amount_col = f"Amount_{month_label}"
 
                 df.rename(
                     columns={
                         "Performed Hrs": perf_col,
                         "Billed Hrs": bill_col,
                         "Adj Amount": adj_amt_col,
-                        "Adj Remarks": adj_rem_col
+                        "Adj Remarks": adj_rem_col,
+                        "Amount": amount_col
                     },
                     inplace=True
                 )
@@ -299,7 +305,8 @@ if run_button:
                         "Performed Hrs": perf_col,
                         "Billed Hrs": bill_col,
                         "Adj Amount": adj_amt_col,
-                        "Adj Remarks": adj_rem_col
+                        "Adj Remarks": adj_rem_col,
+                        "Amount": amount_col
                     },
                     inplace=True
                 )
@@ -308,6 +315,8 @@ if run_button:
                 billed_dict[month_key] = bill_col
                 adj_amt_dict[month_key] = adj_amt_col
                 adj_rem_dict[month_key] = adj_rem_col
+                amount_dict[month_key] = amount_col
+                
 
             except Exception as e:
                 st.error(f"Error renaming columns: {e}")
@@ -504,6 +513,12 @@ if run_button:
                 for k in sorted_keys
             ]
 
+            amount_cols=[
+                amount_dict[k]
+                for k in sorted_keys
+            ]
+                
+
         except Exception as e:
             st.error(
                 f"Error detecting dynamic columns: {e}"
@@ -543,6 +558,10 @@ if run_button:
 
                 ordered_month_cols.append(
                     adj_rem_dict[key]
+                )
+
+                ordered_month_cols.append(
+                    amount_dict[key]
                 )
 
             other_cols = [
@@ -886,6 +905,48 @@ if run_button:
         time.sleep(0.1)
 
         # ---------------------------------------------------
+        # AMOUNT CONSISTENCY CHECKS
+        # ---------------------------------------------------
+        
+        try:
+        
+            status_text.info(
+                "Running Amount consistency validation across 6 months..."
+            )
+            time.sleep(0.1)
+        
+            main_df["Amount_6mon_same"] = (
+                main_df[amount_cols]
+                .nunique(
+                    axis=1,
+                    dropna=False
+                )
+                .eq(1)
+            )
+        
+            status_text.info(
+                "Running Amount consistency validation across latest 3 months..."
+            )
+            time.sleep(0.1)
+        
+            main_df["Amount_3mon_same"] = (
+                main_df[amount_cols[-3:]]
+                .nunique(
+                    axis=1,
+                    dropna=False
+                )
+                .eq(1)
+            )
+        
+        except Exception as e:
+            st.error(
+                f"Error during amount consistency checks: {e}"
+            )
+            st.stop()
+
+        
+
+        # ---------------------------------------------------
         # FINAL OUTPUT PREP
         # ---------------------------------------------------
 
@@ -905,12 +966,14 @@ if run_button:
                 "3mon_2nd",
                 "6mon_3rd",
                 "3mon_3rd",
-                "Adj Amount_6mon",
-                "Adj Remarks_6mon",
-                "Adj Amount_3mon",
-                "Adj Remarks_3mon",
                 "6mon_1st_conso",
-                "3mon_1st_conso"
+                "3mon_1st_conso",
+                "Amount_6mon_same",
+                "Amount_3mon_same",
+                "Adj Amount_6mon",
+                "Adj Amount_3mon",
+                "Adj Remarks_6mon",
+                "Adj Remarks_3mon"                
             ]
 
             Final_df = Final_df[
