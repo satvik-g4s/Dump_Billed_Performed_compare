@@ -342,6 +342,20 @@ if run_button:
         except Exception as e:
             st.error(f"Error detecting dynamic columns: {e}")
             st.stop()
+
+        # Reorder columns in main_df to follow chronological month order
+        identifier_cols = ["Order Locn", "Cust No", "Order No", "Billing Flag", "Rank/Design"]
+        other_cols = [c for c in main_df.columns if c not in identifier_cols and "Performed Hrs_" not in c and "Billed Hrs_" not in c]
+        
+        # Build ordered month columns: for each month in sorted order, add Performed then Billed
+        ordered_month_cols = []
+        for key in sorted_keys:
+            ordered_month_cols.append(perf_dict[key])
+            ordered_month_cols.append(billed_dict[key])
+        
+        # Final column order: identifiers → ordered month columns → other columns (flags etc.)
+        new_column_order = identifier_cols + ordered_month_cols + other_cols
+        main_df = main_df[new_column_order]
         # ---------------------------------------------------
         # CHECK 1
         # ---------------------------------------------------
@@ -502,8 +516,8 @@ if run_button:
                 as_index=False,
                 observed=True
             ).agg({
-                "6mon_1st": "max",
-                "3mon_1st": "max"
+                "6mon_1st": "min",  
+                "3mon_1st": "min"   
             })
         )
 
@@ -518,7 +532,6 @@ if run_button:
             how="left",
             suffixes=("", "_conso")
         )
-
         # ---------------------------------------------------
         # OUTPUT GENERATION
         # ---------------------------------------------------
