@@ -298,6 +298,8 @@ if run_button:
                 adj_amt_col = f"Adj Amount_{month_label}"
                 adj_rem_col = f"Adj Remarks_{month_label}"
                 amount_col = f"Amount_{month_label}"
+                billing_type_col = f"Billing Type_{month_label}"
+                print_type_col = f"Print Type_{month_label}"
 
                 df.rename(
                     columns={
@@ -305,7 +307,9 @@ if run_button:
                         "Billed Hrs": bill_col,
                         "Adj Amount": adj_amt_col,
                         "Adj Remarks": adj_rem_col,
-                        "Amount": amount_col
+                        "Amount": amount_col,
+                        "Billing Type": billing_type_col,
+                        "Print Type": print_type_col
                     },
                     inplace=True
                 )
@@ -316,21 +320,12 @@ if run_button:
                         "Billed Hrs": bill_col,
                         "Adj Amount": adj_amt_col,
                         "Adj Remarks": adj_rem_col,
-                        "Amount": amount_col
+                        "Amount": amount_col,
+                        "Billing Type": billing_type_col,
+                        "Print Type": print_type_col
                     },
                     inplace=True
                 )
-
-                if not is_latest_month:
-                
-                    df.drop(
-                        columns=[
-                            "Billing Type",
-                            "Print Type"
-                        ],
-                        inplace=True,
-                        errors="ignore"
-                    )
 
                 perf_dict[month_key] = perf_col
                 billed_dict[month_key] = bill_col
@@ -458,6 +453,45 @@ if run_button:
             "Step 3/10 Completed: Dataset merging completed successfully."
         )
         time.sleep(0.1)
+
+        # ---------------------------------------------------
+        # BILLING TYPE / PRINT TYPE CONSOLIDATION
+        # ---------------------------------------------------
+        
+        try:
+        
+            status_text.info(
+                "Consolidating Billing Type and Print Type values across months..."
+            )
+            time.sleep(0.1)
+        
+            billing_type_cols = [
+                col for col in main_df.columns
+                if col.startswith("Billing Type")
+            ]
+        
+            print_type_cols = [
+                col for col in main_df.columns
+                if col.startswith("Print Type")
+            ]
+        
+            main_df["Billing Type"] = (
+                main_df[billing_type_cols]
+                .ffill(axis=1)
+                .iloc[:, -1]
+            )
+            
+            main_df["Print Type"] = (
+                main_df[print_type_cols]
+                .ffill(axis=1)
+                .iloc[:, -1]
+            )
+        
+        except Exception as e:
+            st.error(
+                f"Error consolidating Billing Type / Print Type: {e}"
+            )
+            st.stop()
 
         # ---------------------------------------------------
         # SORTING
