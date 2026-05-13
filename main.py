@@ -480,16 +480,16 @@ if run_button:
         # ---------------------------------------------------
         # ADJ FLAGS
         # ---------------------------------------------------
+
+        status_text.info("Running Adjustment Checks")
         
-        main_df["Adj Amount"] = main_df[adj_amt_cols].any(axis=1)
+        main_df["Adj Amount_6mon"] = main_df[adj_amt_cols].any(axis=1)
         
-        main_df["Adj Remarks"] = main_df[adj_rem_cols].any(axis=1)
+        main_df["Adj Remarks_6mon"] = main_df[adj_rem_cols].any(axis=1)
         
         main_df["Adj Amount_3mon"] = main_df[adj_amt_cols[-3:]].any(axis=1)
         
         main_df["Adj Remarks_3mon"] = main_df[adj_rem_cols[-3:]].any(axis=1)
-
-        main_df.drop(columns=adj_amt_cols + adj_rem_cols, inplace=True)
 
         # ---------------------------------------------------
         # OUTPUT GENERATION
