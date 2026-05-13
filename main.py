@@ -24,7 +24,7 @@ st.caption("""
 Required Columns:
 Order Locn, Cust No, Order No, Billing Flag, Status,
 Rank/Design, Period To, Performed Hrs, Billed Hrs,
-Adj Amount, Adj Remarks
+Adj Amount, Adj Remarks, Amount
 
 Upload all 6 monthly CSV dump files together in untouched format.
 Header starts from row 3.
