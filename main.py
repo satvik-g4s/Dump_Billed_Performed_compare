@@ -343,19 +343,24 @@ if run_button:
             st.error(f"Error detecting dynamic columns: {e}")
             st.stop()
 
-        # Reorder columns in main_df to follow chronological month order
+                # Reorder columns in main_df to follow chronological month order WITH ALL columns
         identifier_cols = ["Order Locn", "Cust No", "Order No", "Billing Flag", "Rank/Design"]
-        other_cols = [c for c in main_df.columns if c not in identifier_cols and "Performed Hrs_" not in c and "Billed Hrs_" not in c]
         
-        # Build ordered month columns: for each month in sorted order, add Performed then Billed
+        # Build ordered month columns: for each month, add Performed → Billed → Adj Amount → Adj Remarks
         ordered_month_cols = []
         for key in sorted_keys:
-            ordered_month_cols.append(perf_dict[key])
-            ordered_month_cols.append(billed_dict[key])
+            ordered_month_cols.append(perf_dict[key])           # Performed Hrs
+            ordered_month_cols.append(billed_dict[key])         # Billed Hrs
+            ordered_month_cols.append(adj_amt_dict[key])        # Adj Amount
+            ordered_month_cols.append(adj_rem_dict[key])        # Adj Remarks
         
-        # Final column order: identifiers → ordered month columns → other columns (flags etc.)
+        # Get all other columns (flags, etc.) that aren't month columns
+        other_cols = [c for c in main_df.columns if c not in identifier_cols and c not in ordered_month_cols]
+        
+        # Final column order: identifiers → all month columns (grouped by month) → other columns
         new_column_order = identifier_cols + ordered_month_cols + other_cols
         main_df = main_df[new_column_order]
+        
         # ---------------------------------------------------
         # CHECK 1
         # ---------------------------------------------------
@@ -532,6 +537,33 @@ if run_button:
             how="left",
             suffixes=("", "_conso")
         )
+
+        Final_df=main_df.copy();
+
+                # Keep only specific columns in Final_df
+        columns_to_keep = [
+            "Order Locn",
+            "Cust No", 
+            "Order No",
+            "Billing Flag",
+            "Rank/Design",
+            "6mon_1st",
+            "3mon_1st",
+            "6mon_2nd",
+            "3mon_2nd",
+            "6mon_3rd",
+            "3mon_3rd",
+            "Adj Amount_6mon",
+            "Adj Remarks_6mon",
+            "Adj Amount_3mon",
+            "Adj Remarks_3mon",
+            "6mon_1st_conso",
+            "3mon_1st_conso"
+        ]
+        
+        # Filter Final_df to only keep these columns
+        Final_df = Final_df[columns_to_keep]
+        
         # ---------------------------------------------------
         # OUTPUT GENERATION
         # ---------------------------------------------------
@@ -543,10 +575,16 @@ if run_button:
             output = BytesIO()
 
             with pd.ExcelWriter(output, engine="openpyxl") as writer:
+                Final_df.to_excel(
+                    writer,
+                    index=False,
+                    sheet_name="Check_Flags_Only"
+                )
+                
                 main_df.to_excel(
                     writer,
                     index=False,
-                    sheet_name="Output"
+                    sheet_name="Detailed_Monthly_Data"
                 )
             
                 check3_df.to_excel(
