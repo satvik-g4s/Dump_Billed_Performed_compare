@@ -24,7 +24,7 @@ st.caption("""
 Required Columns:
 Order Locn, Cust No, Order No, Billing Flag, Status,
 Rank/Design, Period To, Performed Hrs, Billed Hrs,
-Adj Amount, Adj Remarks, Amount
+Adj Amount, Adj Remarks, Amount, Billing Type, Print Type
 
 Upload all 6 monthly CSV dump files together in untouched format.
 Header starts from row 3.
@@ -73,7 +73,9 @@ if run_button:
             "Status",
             "Adj Amount",
             "Adj Remarks",
-            "Amount"
+            "Amount",
+            "Billing Type",
+            "Print Type"
         ]
 
         dfs = []
@@ -106,7 +108,9 @@ if run_button:
                         "Status": "category",
                         "Order No": "category",
                         "Adj Amount": "float32",
-                        "Adj Remarks": "string"
+                        "Adj Remarks": "string",
+                        "Billing Type": "category",
+                        "Print Type": "category"
                     }
                 )
 
@@ -229,7 +233,9 @@ if run_button:
                         "Billed Hrs": "sum",
                         "Amount": "sum",
                         "Adj Amount": "max",
-                        "Adj Remarks": "max"
+                        "Adj Remarks": "max",
+                        "Billing Type": "first",
+                        "Print Type": "first"
                     })
                 )
 
@@ -278,6 +284,10 @@ if run_button:
                     f"{month:02d}-{str(year)[-2:]}"
                 )
 
+                is_latest_month = (
+                    i == len(dfs) - 1
+                )
+
                 status_text.info(
                     f"Generating dynamic month labels for {month_label}..."
                 )
@@ -310,6 +320,17 @@ if run_button:
                     },
                     inplace=True
                 )
+
+                if not is_latest_month:
+                
+                    df.drop(
+                        columns=[
+                            "Billing Type",
+                            "Print Type"
+                        ],
+                        inplace=True,
+                        errors="ignore"
+                    )
 
                 perf_dict[month_key] = perf_col
                 billed_dict[month_key] = bill_col
@@ -819,14 +840,15 @@ if run_button:
             time.sleep(0.1)
 
             main_df["Adj Amount_6mon"] = (
-                main_df[adj_amt_cols]
+                ~main_df[adj_amt_cols]
+                .any(axis=1)
+            )
+            
+            main_df["Adj Remarks_6mon"] = (
+                ~main_df[adj_rem_cols]
                 .any(axis=1)
             )
 
-            main_df["Adj Remarks_6mon"] = (
-                main_df[adj_rem_cols]
-                .any(axis=1)
-            )
 
             status_text.info(
                 "Generating latest 3-month adjustment indicators..."
@@ -834,15 +856,14 @@ if run_button:
             time.sleep(0.1)
 
             main_df["Adj Amount_3mon"] = (
-                main_df[adj_amt_cols[-3:]]
+                ~main_df[adj_amt_cols[-3:]]
                 .any(axis=1)
             )
-
+            
             main_df["Adj Remarks_3mon"] = (
-                main_df[adj_rem_cols[-3:]]
+                ~main_df[adj_rem_cols[-3:]]
                 .any(axis=1)
             )
-
         except Exception as e:
             st.error(
                 f"Error during adjustment flag checks: {e}"
@@ -960,6 +981,8 @@ if run_button:
                 "Order No",
                 "Billing Flag",
                 "Rank/Design",
+                "Billing Type",
+                "Print Type",
                 "6mon_1st",
                 "3mon_1st",
                 "6mon_2nd",
