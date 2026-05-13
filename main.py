@@ -1102,4 +1102,5 @@ with st.expander("Financial Logic & Reconciliation Checks"):
     ### Data Quality Notes
     - Only records with Status 'A' (Active) or 'O' (Open) are included;
     - Empty adjustment remarks or dashes '-' are treated as no remark
+    """)
     
