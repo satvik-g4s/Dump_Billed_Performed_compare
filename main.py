@@ -20,7 +20,7 @@ uploaded_files = st.file_uploader(
     accept_multiple_files=True
 )
 
-st.caption("""Required Columns:Order Locn, Cust No, Order No, Billing Flag,Status, Rank/Design, Period To, Performed Hrs, Billed Hrs ; 
+st.caption("""Required Columns:Order Locn, Cust No, Order No, Billing Flag,Status, Rank/Design, Period To, Performed Hrs, Billed Hrs, Adj Amount, Adj Remarks; 
 Upload All 6 Dump Files Together in csv format UNTOUCHED, Header starts from row 3
 """)
 
@@ -62,7 +62,10 @@ if run_button:
             "Period To",
             "Performed Hrs",
             "Billed Hrs",
-            "Status"
+            "Status", 
+            "Adj Amount",
+            "Adj Remarks"
+            
         ]
 
         dfs = []
@@ -86,10 +89,25 @@ if run_button:
                         "Performed Hrs": "float32",
                         "Billed Hrs": "float32",
                         "Status": "category",
-                        "Order No": "category"
+                        "Order No": "category",
+                        "Adj Amount" : "float32",
+                        "Adj Remarks" : "string"
                     }
                 )
                 df = df[df["Status"].isin(["A", "O"])]
+                df["Adj Amount"] = (
+                    df["Adj Amount"]
+                    .fillna(0)
+                    .ne(0)
+                )
+                df["Adj Remarks"] = (
+                df["Adj Remarks"]
+                .fillna("")
+                .astype(str)
+                .str.replace("-", "", regex=False)
+                .str.strip()
+                .ne("")
+            )
             except Exception as e:
                 st.error(f"Error reading file {uploaded_file.name}: {e}")
                 st.stop()
@@ -110,6 +128,8 @@ if run_button:
 
         billed_dict = {}
         perf_dict = {}
+        adj_amt_dict = {}
+        adj_rem_dict = {}
 
         status_text.info("Processing monthly datasets...")
         time.sleep(0.5)
@@ -128,13 +148,17 @@ if run_button:
 
             try:
                 df = (
-                        df.groupby(
-                            ["Order Locn", "Cust No","Order No", "Billing Flag", "Rank/Design"],
-                            as_index=False,
-                            observed=True
-                        )[["Performed Hrs", "Billed Hrs"]]
-                        .sum()
-                    )
+                    df.groupby(
+                        ["Order Locn", "Cust No", "Order No", "Billing Flag", "Rank/Design"],
+                        as_index=False,
+                        observed=True
+                    ).agg({
+                        "Performed Hrs": "sum",
+                        "Billed Hrs": "sum",
+                        "Adj Amount": "max",
+                        "Adj Remarks": "max"
+                    })
+                )
             except Exception as e:
                 st.error(f"Error during grouping step: {e}")
                 st.stop()
@@ -144,8 +168,12 @@ if run_button:
                         ["Order Locn", "Cust No","Order No", "Billing Flag"],
                         as_index=False,
                         observed=True
-                    )[["Performed Hrs", "Billed Hrs"]]
-                    .sum()
+                    ).agg({
+                        "Performed Hrs": "sum",
+                        "Billed Hrs": "sum",
+                        "Adj Amount": "max",
+                        "Adj Remarks": "max"
+                    })
                 )
             
             except Exception as e:
@@ -159,24 +187,32 @@ if run_button:
 
                 perf_col = f"Performed Hrs_{month_label}"
                 bill_col = f"Billed Hrs_{month_label}"
+                adj_amt_col = f"Adj Amount_{month_label}"
+                adj_rem_col = f"Adj Remarks_{month_label}"
                 
                 df.rename(
                     columns={
                         "Performed Hrs": perf_col,
-                        "Billed Hrs": bill_col
+                        "Billed Hrs": bill_col,
+                        "Adj Amount": adj_amt_col,
+                        "Adj Remarks": adj_rem_col
                     },
                     inplace=True
                 )
                 check3_temp.rename(
                     columns={
                         "Performed Hrs": perf_col,
-                        "Billed Hrs": bill_col
+                        "Billed Hrs": bill_col,
+                        "Adj Amount": adj_amt_col,
+                        "Adj Remarks": adj_rem_col
                     },
                     inplace=True
                 )
                 
                 perf_dict[month_key] = perf_col
                 billed_dict[month_key] = bill_col
+                adj_amt_dict[month_key] = adj_amt_col
+                adj_rem_dict[month_key] = adj_rem_col
 
             except Exception as e:
                 st.error(f"Error renaming columns: {e}")
@@ -187,6 +223,9 @@ if run_button:
 
         status_text.success("Monthly processing completed.")
         time.sleep(0.5)
+
+        
+        
 
         # ---------------------------------------------------
         # MERGING
@@ -298,7 +337,8 @@ if run_button:
         
             perf_cols = [perf_dict[k] for k in sorted_keys]
             billed_cols = [billed_dict[k] for k in sorted_keys]
-        
+            adj_amt_cols = [adj_amt_dict[k] for k in sorted_keys]
+            adj_rem_cols = [adj_rem_dict[k] for k in sorted_keys]     
         except Exception as e:
             st.error(f"Error detecting dynamic columns: {e}")
             st.stop()
@@ -437,8 +477,19 @@ if run_button:
         except Exception as e:
             st.error(f"Error during check3_3mon: {e}")
             st.stop()
-
+        # ---------------------------------------------------
+        # ADJ FLAGS
+        # ---------------------------------------------------
         
+        main_df["Adj Amount"] = main_df[adj_amt_cols].any(axis=1)
+        
+        main_df["Adj Remarks"] = main_df[adj_rem_cols].any(axis=1)
+        
+        main_df["Adj Amount_3mon"] = main_df[adj_amt_cols[-3:]].any(axis=1)
+        
+        main_df["Adj Remarks_3mon"] = main_df[adj_rem_cols[-3:]].any(axis=1)
+
+        main_df.drop(columns=adj_amt_cols + adj_rem_cols, inplace=True)
 
         # ---------------------------------------------------
         # OUTPUT GENERATION
