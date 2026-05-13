@@ -491,6 +491,34 @@ if run_button:
         
         main_df["Adj Remarks_3mon"] = main_df[adj_rem_cols[-3:]].any(axis=1)
 
+
+        # ---------------------------------------------------
+        # CONSO FLAGS
+        # ---------------------------------------------------
+        
+        conso_df = (
+            main_df.groupby(
+                ["Order Locn", "Cust No", "Order No", "Billing Flag"],
+                as_index=False,
+                observed=True
+            ).agg({
+                "6mon_1st": "max",
+                "3mon_1st": "max"
+            })
+        )
+
+        main_df = main_df.merge(
+            conso_df,
+            on=[
+                "Order Locn",
+                "Cust No",
+                "Order No",
+                "Billing Flag"
+            ],
+            how="left",
+            suffixes=("", "_conso")
+        )
+
         # ---------------------------------------------------
         # OUTPUT GENERATION
         # ---------------------------------------------------
