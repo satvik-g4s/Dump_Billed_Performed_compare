@@ -667,3 +667,4 @@ with st.expander("Financial Logic"):
 
     3-month checks use only the latest 3 uploaded months.
     """)
+    
