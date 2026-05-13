@@ -186,6 +186,8 @@ if run_button:
         adj_amt_dict = {}
         adj_rem_dict = {}
         amount_dict = {}
+        billing_type_dict = {}
+        print_type_dict = {}
 
         status_text.info(
             "Step 2/10: Aggregating monthly reconciliation data..."
@@ -332,6 +334,8 @@ if run_button:
                 adj_amt_dict[month_key] = adj_amt_col
                 adj_rem_dict[month_key] = adj_rem_col
                 amount_dict[month_key] = amount_col
+                billing_type_dict[month_key] = billing_type_col
+                print_type_dict[month_key] = print_type_col
                 
 
             except Exception as e:
@@ -572,6 +576,16 @@ if run_button:
                 amount_dict[k]
                 for k in sorted_keys
             ]
+
+            billing_type_cols = [
+                billing_type_dict[k]
+                for k in sorted_keys
+            ]
+            
+            print_type_cols = [
+                print_type_dict[k]
+                for k in sorted_keys
+            ]
                 
 
         except Exception as e:
@@ -617,6 +631,13 @@ if run_button:
 
                 ordered_month_cols.append(
                     amount_dict[key]
+                )
+                ordered_month_cols.append(
+                    billing_type_dict[key]
+                )
+                
+                ordered_month_cols.append(
+                    print_type_dict[key]
                 )
 
             other_cols = [
