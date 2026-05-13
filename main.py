@@ -59,7 +59,7 @@ if run_button:
         status_text.info(
             "Step 1/10: Reading and validating uploaded monthly dump files..."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         required_columns = [
             "Order Locn",
@@ -83,7 +83,7 @@ if run_button:
             status_text.info(
                 f"Reading file {idx}/6: {uploaded_file.name}"
             )
-            time.sleep(0.2)
+            time.sleep(0.4)
 
             try:
 
@@ -128,7 +128,7 @@ if run_button:
                 status_text.info(
                     f"Applying Status filter (A/O) on {uploaded_file.name}..."
                 )
-                time.sleep(0.2)
+                time.sleep(0.4)
 
                 df = df[df["Status"].isin(["A", "O"])]
 
@@ -141,7 +141,7 @@ if run_button:
                 status_text.info(
                     f"Transforming adjustment columns for {uploaded_file.name}..."
                 )
-                time.sleep(0.2)
+                time.sleep(0.4)
 
                 df["Adj Amount"] = (
                     df["Adj Amount"]
@@ -169,7 +169,7 @@ if run_button:
         status_text.success(
             "Step 1/10 Completed: All monthly files validated and loaded successfully."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         # ---------------------------------------------------
         # PROCESSING LOGIC
@@ -183,14 +183,14 @@ if run_button:
         status_text.info(
             "Step 2/10: Aggregating monthly reconciliation data..."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         for i, df in enumerate(dfs):
 
             status_text.info(
                 f"Processing monthly aggregation for dataset {i+1}/6..."
             )
-            time.sleep(0.2)
+            time.sleep(0.4)
 
             check3_temp = df.copy()
 
@@ -208,7 +208,7 @@ if run_button:
                 status_text.info(
                     "Creating rank-level grouped reconciliation structure..."
                 )
-                time.sleep(0.2)
+                time.sleep(0.4)
 
                 df = (
                     df.groupby(
@@ -238,7 +238,7 @@ if run_button:
                 status_text.info(
                     "Creating billing-level grouped reconciliation structure..."
                 )
-                time.sleep(0.2)
+                time.sleep(0.4)
 
                 check3_temp = (
                     check3_temp.groupby(
@@ -277,7 +277,7 @@ if run_button:
                 status_text.info(
                     f"Generating dynamic month labels for {month_label}..."
                 )
-                time.sleep(0.2)
+                time.sleep(0.4)
 
                 perf_col = f"Performed Hrs_{month_label}"
                 bill_col = f"Billed Hrs_{month_label}"
@@ -319,7 +319,7 @@ if run_button:
         status_text.success(
             "Step 2/10 Completed: Monthly datasets processed successfully."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         # ---------------------------------------------------
         # MERGING
@@ -328,14 +328,14 @@ if run_button:
         status_text.info(
             "Step 3/10: Merging monthly datasets into unified reconciliation structure..."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         try:
 
             status_text.info(
                 "Merging rank-level monthly datasets..."
             )
-            time.sleep(0.2)
+            time.sleep(0.4)
 
             optimized_dfs = []
 
@@ -382,7 +382,7 @@ if run_button:
             status_text.info(
                 "Merging billing-level grouped datasets..."
             )
-            time.sleep(0.2)
+            time.sleep(0.4)
 
             optimized_check3_dfs = []
 
@@ -427,7 +427,7 @@ if run_button:
         status_text.success(
             "Step 3/10 Completed: Dataset merging completed successfully."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         # ---------------------------------------------------
         # SORTING
@@ -436,7 +436,7 @@ if run_button:
         status_text.info(
             "Step 4/10: Sorting reconciliation outputs chronologically and hierarchically..."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         try:
 
@@ -469,7 +469,7 @@ if run_button:
         status_text.success(
             "Step 4/10 Completed: Output sorting completed successfully."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         # ---------------------------------------------------
         # COLUMN DETECTION
@@ -478,7 +478,7 @@ if run_button:
         status_text.info(
             "Step 5/10: Detecting and organizing dynamic monthly columns..."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         try:
 
@@ -515,7 +515,7 @@ if run_button:
             status_text.info(
                 "Reordering monthly columns chronologically..."
             )
-            time.sleep(0.2)
+            time.sleep(0.4)
 
             identifier_cols = [
                 "Order Locn",
@@ -568,7 +568,7 @@ if run_button:
         status_text.success(
             "Step 5/10 Completed: Monthly column organization completed."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         # ---------------------------------------------------
         # CHECK 1
@@ -577,14 +577,14 @@ if run_button:
         status_text.info(
             "Step 6/10: Running Check 1 - Month-wise Performed vs Billed validation..."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         try:
 
             status_text.info(
                 "Running 6-month exact reconciliation validation..."
             )
-            time.sleep(0.2)
+            time.sleep(0.4)
 
             comparison = np.isclose(
                 main_df[perf_cols].values,
@@ -607,7 +607,7 @@ if run_button:
             status_text.info(
                 "Running latest 3-month exact reconciliation validation..."
             )
-            time.sleep(0.2)
+            time.sleep(0.4)
 
             comparison_3 = np.isclose(
                 main_df[perf_cols[-3:]].values,
@@ -628,7 +628,7 @@ if run_button:
         status_text.success(
             "Step 6/10 Completed: Check 1 validation completed successfully."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         # ---------------------------------------------------
         # CHECK 2
@@ -637,14 +637,14 @@ if run_button:
         status_text.info(
             "Step 7/10: Running Check 2 - Cross-month consistency validation..."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         try:
 
             status_text.info(
                 "Checking consistency across all 6 months..."
             )
-            time.sleep(0.2)
+            time.sleep(0.4)
 
             all_6_cols = (
                 perf_cols +
@@ -671,7 +671,7 @@ if run_button:
             status_text.info(
                 "Checking consistency across latest 3 months..."
             )
-            time.sleep(0.2)
+            time.sleep(0.4)
 
             all_3_cols = (
                 perf_cols[-3:] +
@@ -696,7 +696,7 @@ if run_button:
         status_text.success(
             "Step 7/10 Completed: Check 2 consistency validation completed."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         # ---------------------------------------------------
         # CHECK 3
@@ -705,14 +705,14 @@ if run_button:
         status_text.info(
             "Step 8/10: Running Check 3 - Billing-level grouped reconciliation..."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         try:
 
             status_text.info(
                 "Running grouped 6-month billing reconciliation..."
             )
-            time.sleep(0.2)
+            time.sleep(0.4)
 
             comparison_6 = np.isclose(
                 check3_df[perf_cols].values,
@@ -735,7 +735,7 @@ if run_button:
             status_text.info(
                 "Running grouped latest 3-month billing reconciliation..."
             )
-            time.sleep(0.2)
+            time.sleep(0.4)
 
             comparison_3 = np.isclose(
                 check3_df[perf_cols[-3:]].values,
@@ -750,7 +750,7 @@ if run_button:
             status_text.info(
                 "Propagating grouped reconciliation results back to detailed output..."
             )
-            time.sleep(0.2)
+            time.sleep(0.4)
 
             main_df = main_df.merge(
                 check3_df[
@@ -781,7 +781,7 @@ if run_button:
         status_text.success(
             "Step 8/10 Completed: Group-level reconciliation completed."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         # ---------------------------------------------------
         # ADJUSTMENT FLAGS
@@ -790,14 +790,14 @@ if run_button:
         status_text.info(
             "Step 9/10: Evaluating adjustment amount and remarks flags..."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         try:
 
             status_text.info(
                 "Generating 6-month adjustment indicators..."
             )
-            time.sleep(0.2)
+            time.sleep(0.4)
 
             main_df["Adj Amount_6mon"] = (
                 main_df[adj_amt_cols]
@@ -812,7 +812,7 @@ if run_button:
             status_text.info(
                 "Generating latest 3-month adjustment indicators..."
             )
-            time.sleep(0.2)
+            time.sleep(0.4)
 
             main_df["Adj Amount_3mon"] = (
                 main_df[adj_amt_cols[-3:]]
@@ -833,7 +833,7 @@ if run_button:
         status_text.success(
             "Step 9/10 Completed: Adjustment flag generation completed."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         # ---------------------------------------------------
         # CONSO FLAGS
@@ -844,7 +844,7 @@ if run_button:
             status_text.info(
                 "Generating consolidated billing-level reconciliation flags..."
             )
-            time.sleep(0.2)
+            time.sleep(0.4)
 
             conso_df = (
                 main_df.groupby(
@@ -883,7 +883,7 @@ if run_button:
         status_text.success(
             "Consolidated reconciliation flags generated successfully."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         # ---------------------------------------------------
         # FINAL OUTPUT PREP
@@ -930,14 +930,14 @@ if run_button:
         status_text.info(
             "Step 10/10: Generating final reconciliation workbook..."
         )
-        time.sleep(0.2)
+        time.sleep(0.4)
 
         try:
 
             status_text.info(
                 "Preparing output sheets and exporting workbook..."
             )
-            time.sleep(0.2)
+            time.sleep(0.4)
 
             output = BytesIO()
 
@@ -982,3 +982,124 @@ if run_button:
             file_name="Billed-Performed-hours_Checks_output.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+
+# ---------------------------------------------------
+# DOCUMENTATION SECTION
+# ---------------------------------------------------
+
+with st.expander("What This Tool Does"):
+
+    st.write("""
+    This tool compares performed hours and billed hours across 6 monthly datasets.
+
+    It performs multiple reconciliation checks:
+    - Month-wise equality validation
+    - Consistency validation across all months
+    - Group-level reconciliation checks
+
+    The final output highlights whether customer-level and group-level hours remain aligned over time.
+    """)
+
+with st.expander("How to Use"):
+
+    st.write("""
+    1. Upload all 6 monthly CSV files
+    2. Click Run
+    3. Wait for processing to complete
+    4. Download the generated reconciliation report
+    """)
+
+with st.expander("Output Details"):
+
+    st.write("""
+    The output contains:
+    
+    - Original merged monthly data
+    - Monthly performed hours
+    - Monthly billed hours
+    - 6-month reconciliation checks
+    - Last 3-month reconciliation checks
+    - Group-level validation results
+
+    Grouping hierarchy:
+    
+    Order Location → Customer Number → Billing Flag → Rank/Design
+    """)
+
+with st.expander("Financial Logic & Reconciliation Checks"):
+
+    st.write("""
+    ### Overview
+    This tool performs three distinct reconciliation checks to validate the alignment between performed hours and billed hours across a 6-month period.
+    
+    ---
+    
+    ### Check 1: Month-wise Equality Validation
+    **What it does:**  
+    Compares performed hours against billed hours for each individual month.
+    
+    **Logic:**  
+    For each month, checks if `Performed Hrs == Billed Hrs` (allowing for floating-point precision).
+    
+    **Flags created:**
+    - `6mon_1st`: TRUE if performed hours match billed hours for ALL 6 months
+    - `3mon_1st`: TRUE if performed hours match billed hours for the LAST 3 months only
+    
+    ---
+    
+    ### Check 2: Cross-month Consistency Validation
+    **What it does:**  
+    Verifies that all monthly values (both performed and billed hours) remain consistent across the time period.
+    
+    **Logic:**  
+    Checks if every value in the combined set of performed and billed hours (12 values total for 6 months) is identical.
+    
+    **Flags created:**
+    - `6mon_2nd`: TRUE if all 12 monthly values are the same across all 6 months
+    - `3mon_2nd`: TRUE if all values are consistent across the last 3 months
+    
+    ---
+    
+    ### Check 3: Group-level Reconciliation
+    **What it does:**  
+    Performs validation at the customer-group level, ignoring individual Rank/Design breakdowns.
+    
+    **Logic:**  
+    Groups data by Order Location, Customer Number, Order Number, and Billing Flag (aggregating all Rank/Design entries). Then applies the same equality check as Check 1.
+    
+    **Flags created:**
+    - `6mon_3rd`: TRUE if grouped performed hours match grouped billed hours for all 6 months
+    - `3mon_3rd`: TRUE if grouped values match for the last 3 months
+    
+    ---
+    
+    ### Consolidated Flags
+    **What they do:**  
+    `6mon_1st_conso` and `3mon_1st_conso` show whether ALL Rank/Design entries within the same customer group passed Check 1.
+    
+    **Logic:**  
+    For each unique combination of (Order Locn, Cust No, Order No, Billing Flag), checks if every associated Rank/Design entry has TRUE in Check 1.
+    
+    **Result:**
+    - TRUE if ALL Rank/Design entries in the group passed Check 1
+    - FALSE if ANY Rank/Design entry in the group failed Check 1
+    
+    ---
+    
+    ### Adjustment Flags
+    **Adj Amount_6mon / Adj Amount_3mon:**  
+    TRUE if there was any adjustment amount recorded in the respective time period.
+    
+    **Adj Remarks_6mon / Adj Remarks_3mon:**  
+    TRUE if there were any adjustment remarks (non-empty, non-dash) in the respective time period.
+    
+    ---
+    
+    ### Time Period Definitions
+    - **6-month checks:** Use all 6 uploaded months in chronological order (Month 1 through Month 6)
+    - **3-month checks:** Use only the last 3 uploaded months (Month 4, 5, and 6)
+
+    ### Data Quality Notes
+    - Only records with Status 'A' (Active) or 'O' (Open) are included;
+    - Empty adjustment remarks or dashes '-' are treated as no remark
+    
